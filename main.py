@@ -19,13 +19,15 @@ app.add_middleware(
 class Item(BaseModel):
     content: str
 
+memory = dict()
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+@app.get("/load/<name>")
+def load(name: str):
+    return memory.get(name, "")
 
 
 @app.post("/save")
-async def save(item: Item):
+async def save(name: str, item: Item):
+    memory[name] = item.content
     print("save", item)
     return {"status": "ok"}
