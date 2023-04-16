@@ -17,6 +17,7 @@ app.add_middleware(
 
 
 class Item(BaseModel):
+    name: str
     content: str
 
 class Memory():
@@ -38,14 +39,14 @@ def root():
     return {"status": "ok"}
 
 
-@app.get("/load/<name>")
+@app.get("/load/{name}")
 def load(name: str):
     return memory.get_by_id(name)
 
 
 @app.post("/save")
-async def save(name: str, item: Item):
-    memory.add_by_id(name, item.content)
+async def save(item: Item):
+    memory.add_by_id(item.name, item.content)
     print("save", item)
     return {"status": "ok"}
 
