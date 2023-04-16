@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+import chromadb
 
 app = FastAPI()
 app.mount("/.well-known", StaticFiles(directory=".well-known"), name="static")
@@ -18,7 +19,19 @@ app.add_middleware(
 class Item(BaseModel):
     content: str
 
-memory = dict()
+class Memory():
+    def __init__(self):
+        self.chroma_client = chromadb.Client()
+        self.collection = self.chroma_client.create_collection(name="global")
+
+    def add_by_id(self, id, text): 
+        self.collection.add(documents=[text], ids=[id])
+
+    def get_by_id(self, id): 
+        return self.collection.get(ids=[id])
+    
+memory = Memory()
+
 
 @app.get("/")
 def root():
@@ -27,12 +40,12 @@ def root():
 
 @app.get("/load/<name>")
 def load(name: str):
-    return memory.get(name, "")
+    return memory.get_by_id(name)
 
 
 @app.post("/save")
 async def save(name: str, item: Item):
-    memory[name] = item.content
+    memory.add_by_id(name, item.content)
     print("save", item)
     return {"status": "ok"}
 
