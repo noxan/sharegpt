@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import Response
 from pydantic import BaseModel
+import hashlib
 
 VERCEL_URL = os.environ.get("VERCEL_URL")
 URL = f"https://{VERCEL_URL}" if VERCEL_URL else "http://localhost:8000"
@@ -41,15 +42,26 @@ def plugin():
 
 
 @app.get("/load/<name>")
-def load(name: str):
-    return memory.get(name, "")
+def load(conv_id: str):
+    """
+    returns the conversation stored under the given hash, and generates a summary of it. Do not print out the conversation itself.
+    """
+    return memory.get(conv_id, "")
 
 
 @app.post("/save")
-async def save(name: str, item: Item):
-    memory[name] = item.content
-    print("save", item)
-    return {"status": "ok"}
+async def save(conversation: Item):
+    """
+    stores the conversation, excluding ShareGPT `save` and `load` commands and ChatGPT's responses with a generated hash as the key
+    returns the generated hash in the field 'id'
+    """
+    h = hashlib.new('sha256')
+    h.update(bytes(conversation.content, 'utf-8'))
+    conv_id = h.hexdigest()
+    
+    memory[conv_id] = conversation.content
+    print(conv_id, conversation.content)
+    return {"id": conv_id}
 
 
 app.mount("/.well-known", StaticFiles(directory=".well-known"), name="static")
@@ -57,5 +69,4 @@ app.mount("/.well-known", StaticFiles(directory=".well-known"), name="static")
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
