@@ -10,6 +10,10 @@ from typing import Dict
 from pymongo import MongoClient
 
 MONGO_URI = "mongodb+srv://cerebral_valley:cerebral_valley_041523@cluster0.byzwutn.mongodb.net/?retryWrites=true&w=majority"
+PRODUCTION_URL = "https://sharegpt-psi.vercel.app"
+DEVELOPMENT_URL = "http://localhost:8000"
+IS_VERCEL = bool(os.environ.get("VERCEL"))
+URL = PRODUCTION_URL if IS_VERCEL else DEVELOPMENT_URL
 
 client = MongoClient(MONGO_URI)
 db = client["sharegpt"]
@@ -50,7 +54,8 @@ def root():
 def plugin():
     with open(".well-known/ai-plugin.json") as f:
         manifest = f.read()
-    return Response(content=manifest, media_type="application/json")
+    content = manifest.replace("{{URL}}", URL)
+    return Response(content=content, media_type="application/json")
 
 
 @app.get("/load_conversation/id/{conv_id}")
