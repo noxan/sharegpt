@@ -5,7 +5,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import Response
 from pydantic import BaseModel
 
-URL = os.environ.get("VERCEL_URL", "http://localhost:8000")
+VERCEL_URL = os.environ.get("VERCEL_URL")
+URL = f"https://{VERCEL_URL}" if VERCEL_URL else "http://localhost:8000"
 
 
 app = FastAPI()
@@ -18,10 +19,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 class Item(BaseModel):
     content: str
 
+
 memory = dict()
+
 
 @app.get("/")
 def root():
@@ -53,4 +57,5 @@ app.mount("/.well-known", StaticFiles(directory=".well-known"), name="static")
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
