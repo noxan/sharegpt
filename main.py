@@ -45,11 +45,6 @@ def build_prompt_formula_prompt(formula_name, formula_description, formula_param
     return formula
 
 
-@app.get("/", include_in_schema=False)
-def root():
-    return {"status": "ok"}
-
-
 @app.get("/.well-known/ai-plugin.json", include_in_schema=False)
 def plugin():
     with open(".well-known/ai-plugin.json") as f:
