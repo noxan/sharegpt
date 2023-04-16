@@ -6,8 +6,10 @@ from fastapi.responses import Response
 from pydantic import BaseModel
 import hashlib
 
-VERCEL_URL = os.environ.get("VERCEL_URL")
-URL = f"https://{VERCEL_URL}" if VERCEL_URL else "http://localhost:8000"
+PRODUCTION_URL = "https://sharegpt-psi.vercel.app"
+DEVELOPMENT_URL = "http://localhost:8000"
+IS_VERCEL = bool(os.environ.get("VERCEL"))
+URL = PRODUCTION_URL if IS_VERCEL else DEVELOPMENT_URL
 
 
 app = FastAPI()
@@ -58,7 +60,7 @@ async def save(conversation: Item):
     h = hashlib.new('sha256')
     h.update(bytes(conversation.content, 'utf-8'))
     conv_id = h.hexdigest()
-    
+
     memory[conv_id] = conversation.content
     print(conv_id, conversation.content)
     return {"id": conv_id}
