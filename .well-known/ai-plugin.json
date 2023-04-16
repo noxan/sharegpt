@@ -3,7 +3,7 @@
   "name_for_human": "ShareGPT",
   "name_for_model": "sharegpt",
   "description_for_human": "Plugin for saving every prompt and response.",
-  "description_for_model": "Plugin for saving conversations and formulas. A user 'runs' a formula by specifying the formula's name and parameters in a prompt. Users might specify the parameters by name or they might be implied. The Assistant will 'run' the given formula by completing the task associated with the formula name with respect to the user's prompt. DO NOT FETCH THE FORMULA THAT THE AGENT IS ASKING TO RUN FROM SHAREGPT",
+  "description_for_model": "Plugin for saving contexts and formulas. A user might specify a conversation, part of a conversation, or some other content to save. A user might save a particular task, request, or workflow as a 'formula'. A user 'runs' a formula by specifying the formula's name and parameters in a prompt. Users might specify the parameters by name or they might be implied. The Assistant will 'run' the given formula by completing the task associated with the formula name with respect to the user's prompt. DO NOT FETCH THE FORMULA THAT THE AGENT IS ASKING TO RUN FROM SHAREGPT",
   "auth": {
     "type": "none"
   },

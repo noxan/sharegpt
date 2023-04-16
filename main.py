@@ -39,6 +39,10 @@ class Formula(BaseModel):
     description: str
     parameters: List[str]
 
+class Context(BaseModel):
+    context_body: str
+    context_name: str
+
 
 def build_prompt_formula_prompt(formula_name, formula_description, formula_parameters):
     formula = f"{formula_name} is a formula. A formula specifies how the Assistant should complete a task, given parameters. A formula is not code. \n\n Parameters of the formula: \n{formula_parameters} \n\n Description of the formula: \n{formula_description}"
@@ -53,26 +57,27 @@ def plugin():
     return Response(content=content, media_type="application/json")
 
 
-@app.get("/load_conversation/{name}")
-def load_conversation(name: str):
+@app.get("/load_context/{name}")
+def load_context(name: str):
+    """
+    loads the content corresponding to the given name from ShareGPT.
+    """
     item = memory.find_one({"payload.name": name})
     if not item: # Add fallback to id
         item = memory.find_one({"_id": name})
     return item.get("payload", "") if item else ""
 
 
-@app.post("/save_conversation")
-async def save_conversation(json_payload: Dict):
+@app.post("/save_context")
+async def save_context(context: Context):
     """
-    stores the conversation, excluding any prompt/response pairs that resulted in a call to this API.
-    returns the generated hash in the field 'id'
+    stores the content specified by the user, excluding any prompt/response pairs that resulted in a call to shareGPT
+    The Assistant may compress the content if it doesn't result in information loss. context_name should have no spaces.
+    returns an id to lookup this context by in other sessions
     """
-    json_str = str(json_payload)
-    h = hashlib.new("sha256")
-    h.update(bytes(json_str, "utf-8"))
-    payload_id = h.hexdigest()
-    memory.insert_one({"_id": payload_id, "payload": json_payload})
-    return {"id": payload_id}
+    context_body, context_name = context.context_body, context.context_name
+    memory.insert_one({"_id": context_name, "payload": context.context_body})
+    return {"id": context_name}
 
 
 @app.post("/save_formula")
@@ -88,27 +93,23 @@ async def save_formula(formula: Formula):
         formula.description,
         formula.parameters,
     )
-    h = hashlib.new("sha256")
-    h.update(
-        bytes(formula_name + str(fromula_description) + str(formula_params), "utf-8")
-    )
-    prompt_id = h.hexdigest()
+    
 
     formula_prompt = build_prompt_formula_prompt(
         formula_name, fromula_description, formula_params
     )
-    memory.insert_one({"_id": prompt_id, "payload": formula_prompt})
+    memory.insert_one({"_id": formula_name, "payload": formula_prompt})
 
-    return {"id": prompt_id, "formula_prompt": formula_prompt}
+    return {"id": formula_name, "formula_prompt": formula_prompt}
 
 
-@app.get("/load_formula")
-async def load_formula(formula_id: str):
+@app.get("/load_formula/{formula_name}")
+async def load_formula(formula_name: str):
     """
     returns the formula corresponding to the given hash (formula_id) from ShareGPT.
     The Assistant should never look up this formula hash again in a session, but instead simply use the description provided in the prompt.
     """
-    formula_prompt = memory.find_one({"_id": formula_id})
+    formula_prompt = memory.find_one({"_id": formula_name})
     return formula_prompt
 
 
