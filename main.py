@@ -53,20 +53,20 @@ def plugin():
     return Response(content=manifest, media_type="application/json")
 
 
-@app.get("/load/id/{conv_id}")
-def load(conv_id: str):
+@app.get("/load_conversation/id/{conv_id}")
+def load_conversation_by_id(conv_id: str):
     item = memory.find_one({"_id": conv_id})
     return item.get("payload", "") if item else ""
 
 
-@app.get("/load/name/{name}")
-def load_name(name: str):
+@app.get("/load_conversation/name/{name}")
+def load_conversation(name: str):
     item = memory.find_one({"payload.name": name})
     return item.get("payload", "") if item else ""
 
 
-@app.post("/save")
-async def save(json_payload: Dict):
+@app.post("/save_conversation")
+async def save_conversation(json_payload: Dict):
     """
     stores the conversation, excluding any prompt/response pairs that resulted in a call to this API.
     returns the generated hash in the field 'id'
