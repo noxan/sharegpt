@@ -57,8 +57,8 @@ async def save(conversation: Item):
     stores the conversation, excluding ShareGPT `save` and `load` commands and ChatGPT's responses with a generated hash as the key
     returns the generated hash in the field 'id'
     """
-    h = hashlib.new('sha256')
-    h.update(bytes(conversation.content, 'utf-8'))
+    h = hashlib.new("sha256")
+    h.update(bytes(conversation.content, "utf-8"))
     conv_id = h.hexdigest()
 
     memory[conv_id] = conversation.content
@@ -71,4 +71,5 @@ app.mount("/.well-known", StaticFiles(directory=".well-known"), name="static")
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
