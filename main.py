@@ -1,4 +1,5 @@
 import os
+from typing import List
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -26,13 +27,18 @@ app.add_middleware(
 class Item(BaseModel):
     content: str
 
-class PromptFormula(BaseModel):
+class Formula(BaseModel):
     name: str
-    body: str
-    parameters: list
+    description: str
+    parameters: List[str]
 
 prompt_memory = dict()
 conversation_memory = dict()
+
+
+def build_prompt_formula_prompt(formula_name, formula_description, formula_parameters):
+    formula = f"{formula_name} is a formula. A formula specifies how the Assistant should complete a task, given parameters. A formula is not code. \n\n Parameters of the formula: \n{formula_parameters} \n\n Description of the formula: \n{formula_description}"
+    return formula
 
 
 @app.get("/", include_in_schema=False)
@@ -59,7 +65,7 @@ def load(conv_id: str):
 @app.post("/save")
 async def save(conversation: Item):
     """
-    stores the conversation, excluding ShareGPT `save` and `load` commands and ChatGPT's responses with a generated hash as the key
+    stores the conversation, excluding any prompt/response pairs that resulted in a call to this API.
     returns the generated hash in the field 'id'
     """
     h = hashlib.new("sha256")
@@ -69,37 +75,33 @@ async def save(conversation: Item):
     conversation_memory[conv_id] = conversation.content
     return {"id": conv_id}
 
-@app.post('/save_prompt')
-async def save_prompt_formula(prompt_formula: PromptFormula):
+@app.post('/save_formula')
+async def save_formula(formula: Formula):
     """
-    saves a prompt formula, which is defined with fields name, body, and parameters
-    generates a hash for the formula which can be used to load it later
+    saves a formula, which is defined with fields name, description, and parameters
+    A formula specifies how the Assistant should complete a task, given parameters.
+    A formula is not code. The prompt name should contain no spaces.
+    The returned id can be used to access the formula
     """
     
-    prompt_name, prompt_body, prompt_parameters = prompt_formula.name, prompt_formula.body, prompt_formula.parameters
+    formula_name, fromula_description, formula_params = formula.name, formula.description, formula.parameters
     h = hashlib.new('sha256')
-    h.update(bytes(prompt_name + str(prompt_body) + str(prompt_parameters), 'utf-8'))
+    h.update(bytes(formula_name + str(fromula_description) + str(formula_params), 'utf-8'))
     prompt_id = h.hexdigest()
 
-    prompt_memory[prompt_id] = {
-        'name': prompt_name,
-        'prompt': prompt_body,
-        'parameters': prompt_parameters
-    }
+    formula_prompt = build_prompt_formula_prompt(formula_name, fromula_description, formula_params)
 
-    return {"id": prompt_id}
+    prompt_memory[prompt_id] = formula_prompt
 
-@app.get('/load_prompt')
-async def load_prompt(prompt_id: str):
+    return {"id": prompt_id, 'formula_prompt': formula_prompt}
+
+@app.get('/load_formula')
+async def load_formula(formula_id: str):
     """
-    returns the prompt stored under the given hash (prompt_id)
-    interpret the text that is returned and do what it says
+    returns the formula corresponding to the given hash (formula_id) from ShareGPT
     """
-    prompt_details = prompt_memory.get(prompt_id, "")
-    if prompt_details:
-        prompt = f"When the user gives the command `ShareGPT run {prompt_details['name']} {prompt_details['parameters']}`, run the following prompt:\n\n{prompt_details['prompt']}\n\n \
-                    but replace anything in square brackets with the users input. The user will specify parameters in the correct order."
-        return prompt
+    formula_prompt = prompt_memory.get(formula_id, "")
+    return formula_prompt
 
 app.mount("/.well-known", StaticFiles(directory=".well-known"), name="static")
 
