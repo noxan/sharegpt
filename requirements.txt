@@ -277,3 +277,4 @@ websockets==11.0.1 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:f888b9565ca1d1c25ab827d184f57f4772ffbfa6baf5710b873b01936cc335ee \
     --hash=sha256:fa1c23ed3a02732fba906ec337df65d4cc23f9f453635e1a803c285b59c7d987 \
     --hash=sha256:fc0a96a6828bfa6f1ccec62b54630bcdcc205d483f5a8806c0a8abb26101c54b
+fastapi==0.95.1
