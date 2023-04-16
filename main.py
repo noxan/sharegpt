@@ -76,7 +76,7 @@ async def save_context(context: Context):
     returns an id to lookup this context by in other sessions
     """
     context_body, context_name = context.context_body, context.context_name
-    memory.update_one({"_id": context_name, "payload": context.context_body})
+    memory.replace_one({"_id": context_name}, {"_id": context_name, "payload": context.context_body}, upsert=True)
     return {"id": context_name}
 
 
@@ -93,7 +93,7 @@ async def save_formula(formula: Formula):
         formula.description,
         formula.parameters,
     )
-    
+
 
     formula_prompt = build_prompt_formula_prompt(
         formula_name, fromula_description, formula_params
