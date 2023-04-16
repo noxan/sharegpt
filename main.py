@@ -53,15 +53,11 @@ def plugin():
     return Response(content=content, media_type="application/json")
 
 
-@app.get("/load_conversation/id/{conv_id}")
-def load_conversation_by_id(conv_id: str):
-    item = memory.find_one({"_id": conv_id})
-    return item.get("payload", "") if item else ""
-
-
-@app.get("/load_conversation/name/{name}")
+@app.get("/load_conversation/{name}")
 def load_conversation(name: str):
     item = memory.find_one({"payload.name": name})
+    if not item: # Add fallback to id
+        item = memory.find_one({"_id": name})
     return item.get("payload", "") if item else ""
 
 
