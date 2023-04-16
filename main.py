@@ -30,7 +30,7 @@ class Item(BaseModel):
 memory = dict()
 
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 def root():
     return {"status": "ok"}
 
