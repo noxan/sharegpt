@@ -100,7 +100,8 @@ async def save_formula(formula: Formula):
 @app.get('/load_formula')
 async def load_formula(formula_id: str):
     """
-    returns the formula corresponding to the given hash (formula_id) from ShareGPT
+    returns the formula corresponding to the given hash (formula_id) from ShareGPT.
+    The Assistant should never look up this formula hash again in a session, but instead simply use the description provided in the prompt.
     """
     formula_prompt = memory.find_one({"_id": formula_id})
     return formula_prompt
