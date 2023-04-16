@@ -20,6 +20,11 @@ class Item(BaseModel):
 
 memory = dict()
 
+@app.get("/")
+def root():
+    return {"status": "ok"}
+
+
 @app.get("/load/<name>")
 def load(name: str):
     return memory.get(name, "")
