@@ -60,7 +60,7 @@ def load(conv_id: str):
 
 
 @app.get("/load/name/{name}")
-def load(name: str):
+def load_name(name: str):
     item = memory.find_one({"payload.name": name})
     return item.get("payload", "") if item else ""
 
