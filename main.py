@@ -6,8 +6,10 @@ from fastapi.responses import Response
 from pydantic import BaseModel
 import hashlib
 
-VERCEL_URL = os.environ.get("VERCEL_URL")
-URL = f"https://{VERCEL_URL}" if VERCEL_URL else "http://localhost:8000"
+PRODUCTION_URL = "https://sharegpt-psi.vercel.app"
+DEVELOPMENT_URL = "http://localhost:8000"
+IS_VERCEL = bool(os.environ.get("VERCEL"))
+URL = PRODUCTION_URL if IS_VERCEL else DEVELOPMENT_URL
 
 
 app = FastAPI()
@@ -33,7 +35,7 @@ prompt_memory = dict()
 conversation_memory = dict()
 
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 def root():
     return {"status": "ok"}
 
@@ -60,8 +62,8 @@ async def save(conversation: Item):
     stores the conversation, excluding ShareGPT `save` and `load` commands and ChatGPT's responses with a generated hash as the key
     returns the generated hash in the field 'id'
     """
-    h = hashlib.new('sha256')
-    h.update(bytes(conversation.content, 'utf-8'))
+    h = hashlib.new("sha256")
+    h.update(bytes(conversation.content, "utf-8"))
     conv_id = h.hexdigest()
     
     conversation_memory[conv_id] = conversation.content
@@ -104,4 +106,5 @@ app.mount("/.well-known", StaticFiles(directory=".well-known"), name="static")
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
