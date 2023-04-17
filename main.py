@@ -98,7 +98,7 @@ async def save_formula(formula: Formula):
     formula_prompt = build_prompt_formula_prompt(
         formula_name, fromula_description, formula_params
     )
-    memory.update_one({"_id": formula_name, "payload": formula_prompt})
+    memory.replace_one({"_id": formula_name}, {"_id": formula_name, "payload": formula_prompt}, upsert=True)
 
     return {"id": formula_name, "formula_prompt": formula_prompt}
 
